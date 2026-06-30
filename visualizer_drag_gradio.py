@@ -8,10 +8,6 @@ import numpy as np
 import torch
 from PIL import Image
 
-from torch_utils.ops import bias_act, upfirdn2d, filtered_lrelu
-bias_act._init = upfirdn2d._init = filtered_lrelu._init = lambda: False
-# 環境依存の不具合修正
-
 import dnnlib
 from gradio_utils import (ImageMask, draw_mask_on_image, draw_points_on_image,
                           get_latest_points_pair, get_valid_mask,

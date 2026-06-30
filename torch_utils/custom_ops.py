@@ -12,6 +12,7 @@ import importlib
 import os
 import re
 import shutil
+import sys
 import uuid
 
 import torch
@@ -134,11 +135,14 @@ def get_plugin(module_name, sources, headers=None, source_dir=None, **build_kwar
             # Compile.
             cached_sources = [os.path.join(cached_build_dir, os.path.basename(fname)) for fname in sources]
             torch.utils.cpp_extension.load(name=module_name, build_directory=cached_build_dir,
-                verbose=verbose_build, sources=cached_sources, **build_kwargs)
+                verbose=verbose_build, sources=cached_sources, extra_include_paths=[cached_build_dir], **build_kwargs)
         else:
             torch.utils.cpp_extension.load(name=module_name, verbose=verbose_build, sources=sources, **build_kwargs)
 
         # Load.
+        # PATCH: make the freshly-built .so importable
+        if 'cached_build_dir' in dir() and cached_build_dir not in sys.path:
+            sys.path.insert(0, cached_build_dir)
         module = importlib.import_module(module_name)
 
     except:
