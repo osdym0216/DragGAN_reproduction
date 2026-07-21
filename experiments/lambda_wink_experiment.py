@@ -119,8 +119,8 @@ def setup(seed, lr=0.001, trunc_psi=0.7):
 
 def run_drag(r, res, handle_yx, target_yx, mask, motion_lambda,
              max_steps=MAX_STEPS, r1=3, r2=12, trunc_psi=0.7, feature_idx=5):
-    points = [list(map(float, p)) for p in handle_yx]
-    targets = [list(map(float, t)) for t in target_yx]
+    points = [[int(round(p[0])), int(round(p[1]))] for p in handle_yx]
+    targets = [[int(round(t[0])), int(round(t[1]))] for t in target_yx]
     steps = max_steps
     for step in range(max_steps):
         r._render_drag_impl(res, points=points, targets=targets, mask=mask,
