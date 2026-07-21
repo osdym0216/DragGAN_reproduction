@@ -152,3 +152,23 @@ def get_latest_points_pair(points_dict):
     point_idx = list(points_dict.keys())
     latest_point_idx = max(point_idx)
     return latest_point_idx
+
+def polygon_to_mask(vertices, height, width):
+    """クリック頂点リスト [(x,y),...] から 0/1 マスク (H,W)。内部=1, 外部=0。"""
+    mask_img = Image.new('L', (width, height), 0)
+    if len(vertices) >= 3:
+        draw = ImageDraw.Draw(mask_img)
+        draw.polygon([(int(x), int(y)) for x, y in vertices], fill=1)
+    return np.array(mask_img, dtype=np.uint8)
+
+
+def draw_polygon_on_image(image, vertices):
+    """囲み途中の頂点と辺を可視化して返す。"""
+    overlay = Image.new("RGBA", image.size, 0)
+    d = ImageDraw.Draw(overlay)
+    if len(vertices) >= 2:
+        d.line([(int(x), int(y)) for x, y in vertices], fill=(0, 255, 0), width=2)
+    for (x, y) in vertices:
+        r = 4
+        d.ellipse((x-r, y-r, x+r, y+r), fill=(0, 255, 0))
+    return Image.alpha_composite(image.convert("RGBA"), overlay).convert("RGB")

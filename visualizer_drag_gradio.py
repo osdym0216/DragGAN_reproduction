@@ -11,7 +11,8 @@ from PIL import Image
 import dnnlib
 from gradio_utils import (ImageMask, draw_mask_on_image, draw_points_on_image,
                           get_latest_points_pair, get_valid_mask,
-                          on_change_single_global_state)
+                          on_change_single_global_state,
+                          polygon_to_mask, draw_polygon_on_image)
 from viz.renderer import Renderer, add_watermark_np
 
 parser = ArgumentParser()
@@ -195,6 +196,7 @@ with gr.Blocks() as app:
         "draw_interval": 1,
         "renderer": Renderer(disable_timing=True),
         "points": {},
+        "mask_vertices": [],
         "curr_point": None,
         "curr_type_point": "start",
         'editing_state': 'add_points',
@@ -279,6 +281,9 @@ with gr.Blocks() as app:
                         gr.Markdown(value='Mask', show_label=False)
                     with gr.Column(scale=4, min_width=10):
                         enable_add_mask = gr.Button('Edit Flexible Area')
+                        with gr.Row():
+                            enable_polygon_mask = gr.Button('Polygon Mask')
+                            finish_polygon = gr.Button('Apply Polygon')
                         with gr.Row():
                             with gr.Column(scale=1, min_width=10):
                                 form_reset_mask_btn = gr.Button("Reset mask")
@@ -764,6 +769,42 @@ with gr.Blocks() as app:
                               global_state,
                               form_image,
                           ])
+    
+    # 囲みモードに入る（頂点リストを初期化）
+    def on_click_enable_polygon(global_state):
+        global_state['editing_state'] = 'add_polygon'
+        global_state['mask_vertices'] = []
+        image_raw = global_state['images']['image_raw']
+        return global_state, image_raw   # 画像はそのまま、以後クリックで頂点が乗る
+
+    enable_polygon_mask.click(
+        on_click_enable_polygon,
+        inputs=[global_state],
+        outputs=[global_state, form_image],
+    )
+
+    # 頂点を確定してマスク化
+    def on_click_finish_polygon(global_state):
+        verts = global_state['mask_vertices']
+        image_raw = global_state['images']['image_raw']
+        W, H = image_raw.size
+        if len(verts) >= 3:
+            global_state['mask'] = polygon_to_mask(verts, H, W)   # 内部=1
+            print(f'Polygon mask applied with {len(verts)} vertices.')
+        else:
+            print('Need at least 3 vertices; polygon ignored.')
+        global_state['editing_state'] = 'add_points'
+        # マスクを重ねて表示
+        image_draw = update_image_draw(
+            image_raw, global_state['points'], global_state['mask'],
+            global_state['show_mask'], global_state)
+        return global_state, image_draw
+
+    finish_polygon.click(
+        on_click_finish_polygon,
+        inputs=[global_state],
+        outputs=[global_state, form_image],
+    )
 
     def on_click_add_point(global_state, image: dict):
         """Function switch from add mask mode to add points mode.
@@ -790,6 +831,14 @@ with gr.Blocks() as app:
         """This function only support click for point selection
         """
         xy = evt.index
+
+        if global_state['editing_state'] == 'add_polygon':
+            global_state['mask_vertices'].append([xy[0], xy[1]])
+            image_raw = global_state['images']['image_raw']
+            image_draw = draw_polygon_on_image(image_raw, global_state['mask_vertices'])
+            global_state['images']['image_show'] = image_draw
+            return global_state, image_draw
+
         if global_state['editing_state'] != 'add_points':
             print(f'In {global_state["editing_state"]} state. '
                   'Do not add points.')
