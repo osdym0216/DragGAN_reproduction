@@ -775,7 +775,12 @@ with gr.Blocks() as app:
         global_state['editing_state'] = 'add_polygon'
         global_state['mask_vertices'] = []
         image_raw = global_state['images']['image_raw']
-        return global_state, image_raw   # 画像はそのまま、以後クリックで頂点が乗る
+        # 点追加と同じ「クリック座標を拾う」モードにする（sketchツール無効）
+        image_draw = update_image_draw(
+            image_raw, global_state['points'], global_state['mask'],
+            global_state['show_mask'], global_state)
+        return (global_state,
+                gr.Image.update(value=image_draw, interactive=False))
 
     enable_polygon_mask.click(
         on_click_enable_polygon,
