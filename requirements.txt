@@ -18,3 +18,4 @@ glfw==2.6.1
 pillow>=9.4.0
 torchvision>=0.15.2
 imageio>=2.9.0
+mediapipe
