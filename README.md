@@ -22,7 +22,7 @@
 
 ## 実行方法（Google Colab）
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/osdym0216/DragGAN_reproduction/demo.jpynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/osdym0216/DragGAN_reproduction/blob/main/demo.jpynb)
 
 上のバッジから `demo.ipynb` を開き、上から順に実行する。
 （Python 3.11 化 → clone → 依存インストール → 重みダウンロード → CUDA オペのビルド確認 → GUI 起動 / 実験実行）
