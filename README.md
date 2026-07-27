@@ -1,3 +1,36 @@
+# DragGAN 再現・失敗分析・改善（映像メディア学レポート課題）
+
+このリポジトリは [XingangPan/DragGAN](https://github.com/XingangPan/DragGAN)（SIGGRAPH 2023）のフォークであり、
+大学のレポート課題として、DragGAN を最新環境で再現し、失敗条件の分析とUI改善を行ったものです。
+
+**元論文**: Pan et al., "Drag Your GAN: Interactive Point-based Manipulation on the Generative Image Manifold", SIGGRAPH 2023
+**オリジナル実装**: https://github.com/XingangPan/DragGAN
+---
+
+## このフォークで加えた変更
+
+### 再現環境の整備
+2023 年公開のコードを 2026 年時点の Google Colab（T4）で動作させるため、requirements.txtを当時のバージョンに合わせるなどの変更を加えた。
+
+### UI の改善
+- **Auto Mask**：handle/target点の周辺だけを自動で可動領域にし、それ以外を固定するボタンを追加
+- **Polygon Mask**：多角形の頂点指定によるマスク領域指定を追加（従来の線塗りつぶしより指定しやすい）
+
+### 失敗分析用スクリプト
+`experiments/` に、失敗条件を定量化するスクリプトを追加。
+- `lambda_wink_experiment.py`：片目ウィンク編集におけるlambdaのトレードオフの定量化
+
+## 実行方法（Google Colab）
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/osdym0216/DragGAN_reproduction/demo.jpynb)
+
+上のバッジから `demo.ipynb` を開き、上から順に実行する。
+（Python 3.11 化 → clone → 依存インストール → 重みダウンロード → CUDA オペのビルド確認 → GUI 起動 / 実験実行）
+
+---
+
+（以下、オリジナルの README）
+
 <p align="center">
 
   <h1 align="center">Drag Your GAN: Interactive Point-based Manipulation on the Generative Image Manifold</h1>
