@@ -12,7 +12,8 @@ import dnnlib
 from gradio_utils import (ImageMask, draw_mask_on_image, draw_points_on_image,
                           get_latest_points_pair, get_valid_mask,
                           on_change_single_global_state,
-                          polygon_to_mask, draw_polygon_on_image)
+                          polygon_to_mask, draw_polygon_on_image,
+                          auto_mask_from_points)
 from viz.renderer import Renderer, add_watermark_np
 
 parser = ArgumentParser()
@@ -284,6 +285,11 @@ with gr.Blocks() as app:
                         with gr.Row():
                             enable_polygon_mask = gr.Button('Polygon Mask')
                             finish_polygon = gr.Button('Apply Polygon')
+                        with gr.Row():
+                            auto_mask_btn = gr.Button('Auto Mask (around points)')
+                        form_auto_mask_x = gr.Number(
+                            value=2.0, label='Auto Mask size (x diameter)',
+                            interactive=True)
                         with gr.Row():
                             with gr.Column(scale=1, min_width=10):
                                 form_reset_mask_btn = gr.Button("Reset mask")
@@ -808,6 +814,28 @@ with gr.Blocks() as app:
     finish_polygon.click(
         on_click_finish_polygon,
         inputs=[global_state],
+        outputs=[global_state, form_image],
+    )
+
+    # 点の周辺を自動でマスク(中点中心・距離×x を直径とする円を可動域に)
+    def on_click_auto_mask(global_state, x_factor):
+        image_raw = global_state['images']['image_raw']
+        W, H = image_raw.size
+        if len(global_state['points']) == 0:
+            print('Auto Mask: no points placed yet.')
+            return global_state, global_state['images']['image_show']
+        movable = auto_mask_from_points(global_state['points'], H, W,
+                                        x_factor=float(x_factor))
+        global_state['mask'] = movable   # 可動=1（既存の drag_mask = 1 - mask に整合）
+        print(f'Auto Mask applied (x={x_factor}).')
+        image_draw = update_image_draw(
+            image_raw, global_state['points'], global_state['mask'],
+            global_state['show_mask'], global_state)
+        return global_state, image_draw
+
+    auto_mask_btn.click(
+        on_click_auto_mask,
+        inputs=[global_state, form_auto_mask_x],
         outputs=[global_state, form_image],
     )
 

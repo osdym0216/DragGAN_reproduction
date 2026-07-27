@@ -172,3 +172,27 @@ def draw_polygon_on_image(image, vertices):
         r = 4
         d.ellipse((x-r, y-r, x+r, y+r), fill=(0, 255, 0))
     return Image.alpha_composite(image.convert("RGBA"), overlay).convert("RGB")
+
+def auto_mask_from_points(points_dict, height, width, x_factor=2.0):
+    """points_dict(global_state['points'])の各 handle/target ペアについて、
+    中点中心・(handle-target距離 × x_factor)を直径とする円を可動(1)にする。
+    複数ペアがあれば円の和集合。可動=1 の 0/1 マスク (H,W) を返す。"""
+    yy, xx = np.mgrid[0:height, 0:width]
+    movable = np.zeros((height, width), dtype=np.uint8)
+    any_pair = False
+    for _, p in points_dict.items():
+        start = p.get('start_temp', p.get('start'))
+        target = p.get('target')
+        if start is None or target is None:
+            continue
+        any_pair = True
+        hx, hy = float(start[0]), float(start[1])
+        tx, ty = float(target[0]), float(target[1])
+        cx, cy = (hx + tx) / 2.0, (hy + ty) / 2.0
+        dist = np.hypot(tx - hx, ty - hy)
+        radius = max((dist * x_factor) / 2.0, 5.0)   # 最低半径5px(距離0でも潰れない)
+        movable[((xx - cx) ** 2 + (yy - cy) ** 2) <= radius ** 2] = 1
+    if not any_pair:
+        # ペアが無ければ全体可動(マスク無しと同じ)
+        movable[:] = 1
+    return movable
