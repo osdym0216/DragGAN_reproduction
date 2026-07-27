@@ -826,7 +826,7 @@ with gr.Blocks() as app:
             return global_state, global_state['images']['image_show']
         movable = auto_mask_from_points(global_state['points'], H, W,
                                         x_factor=float(x_factor))
-        global_state['mask'] = movable   # 可動=1（既存の drag_mask = 1 - mask に整合）
+        global_state['mask'] = 1 - movable
         print(f'Auto Mask applied (x={x_factor}).')
         image_draw = update_image_draw(
             image_raw, global_state['points'], global_state['mask'],
